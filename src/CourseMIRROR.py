@@ -1,5 +1,7 @@
 #https://github.com/dgrtwo/ParsePy
 from parse_rest.connection import register
+import parse_rest
+
 from tables import *
 import json
 import os
@@ -7,14 +9,17 @@ import cmd
 from cmd import Cmd
 import subprocess
 import re
+import fio
+
+TypeMap = {"q1":'q1_summaries', "q2":'q2_summaries', "q3":'q3_summaries', "q4":'q4_summaries'}
 
 from parse_rest.user import User
 
 class CourseMIRROR:
     def __init__(self, app_id, api_key, master_key):
         register(app_id, api_key)
-        
-        self.demo = User.login("demo", "demo")
+
+        self.old_N = 0
     
     def get_data_top(self, table, topK, cid=None, order_by = None):
         data = {'results':[]}
@@ -86,8 +91,8 @@ class CourseMIRROR:
     def get_questions(self, cid):
         courses = self.get_data(Course, cid)
         
-        for course in courses:
-            return course.questions 
+        for course in courses['results']:
+            return json.loads(course['questions'])
         
         return None
     
@@ -96,65 +101,145 @@ class CourseMIRROR:
         
         return reflection[0]['lecture_number']
     
-    def run(self, cid):
-         max_lecture = self.get_max_lecture_num(cid)
-          
-#          #get reflections
-#          reflections = self.get_reflections(cid)
-#          jsonfile = '../data/CourseMIRROR/reflections.json' 
-#          with open(jsonfile, 'w') as outfile:
-#              json.dump(reflections, outfile, encoding='utf-8', indent=2)
-#           
-#          #run senna
-#          import CourseMirror_Survey
-#          os.system('python CourseMirror_Survey.py ' + str(cid) + ' ' +  str(max_lecture))
-#   
-#          cmd = 'cmd /C "runSennaCourseMirror.bat '+str(cid)+ ' ' + str(max_lecture) + '"'
-#          os.system(cmd)
-#           
-        #     . extract phrases (CourseMirror_phrasebasedShallowSummary.py)
-         cmd = 'python CourseMirror_phrasebasedShallowSummary.py ' + str(cid) + ' ' +  str(max_lecture)
-         print cmd
-         os.system(cmd)
-#          
-#         #     . get PhraseMead input (CourseMirror_MeadPhrase.py)
-#          cmd = 'python CourseMirror_MeadPhrase.py ' + str(cid) + ' ' +  str(max_lecture)
-#          print cmd
-#          os.system(cmd)
-#          #     . get PhraseMead output
-#          meaddir = '/cygdrive/e/project/Fall2014/summarization/mead/bin/'
-#          cmd = './get_mead_summary_phrase_coursemirror.sh ' + str(cid) + ' ' +  str(max_lecture)
-#          os.chdir(meaddir)
-#          retcode = subprocess.call([cmd], shell=True)
-#          print retcode
+    def remove_sumamry(self, cid):
+        max_lecture = self.get_max_lecture_num(cid)
         
+        try:
+            summary_Object = Summarization.Query.get(cid=cid, lecture_number = max_lecture, method='ClusterARank')
+            summary_Object.delete()
+        except parse_rest.query.QueryResourceDoesNotExist:
+            pass
+        
+        
+    def upload_summary(self, cid):
+        #only sumbit the last summary
+        max_lecture = self.get_max_lecture_num(cid)
+        
+        for i in range(0, max_lecture):
+            lecture = i + 1
+            
+            path = "../data/" + str(cid) + '/mead/ClusterARank/' + str(lecture)+ '/'
+            if not fio.IsExistPath(path): continue
+            
+            dict = {}
+            for q in self.get_questions(cid):
+                filename = path + q + '.summary'
+                if not fio.IsExist(filename): continue
                 
-        #     . get LSA results (CourseMirrorphrase2phraseSimilarity.java)
-        #os.system('pause')
+                lines = fio.ReadFile(filename)
+                if len(lines) == 0: continue
+                
+                summary = []
+                weight = []
+                
+                for line in lines:
+                    summary.append(line.decode('latin-1').strip())
+                    
+                summarydict = {}
+                summarydict['summaryText'] = summary
+                
+                sourcefile = path + q + '.summary.source'
+                if not fio.IsExist(sourcefile):
+                    for s in summary:
+                        weight.append(1.0)
+                else:
+                    sources = [line.strip().split(",") for line in fio.ReadFile(sourcefile)]
+                    
+                    assert(len(sources) == len(summary))
+                    summarydict['Sources'] = sources
+                    
+                    for source in sources:
+                        weight.append(len(source))
+                    
+                summarydict['weight'] = weight
+                
+                dict[TypeMap[q]] = summarydict
+            
+            #get the object
+            try:
+                summary_Object = Summarization.Query.get(cid=cid, lecture_number = lecture, method='ClusterARank')
+            except parse_rest.query.QueryResourceDoesNotExist:
+                summary_Object = Summarization(cid=cid, lecture_number = lecture, method='ClusterARank')
+            
+            for key in dict:
+                print key
+                summary_Object.__dict__[key] = json.dumps(dict[key])
+            
+            #update the object
+            summary_Object.save()
         
+    def run(self, cid):
+        max_lecture = self.get_max_lecture_num(cid)
+          
+        #get reflections
+        reflections = self.get_reflections(cid)
+        jsonfile = '../data/CourseMIRROR/reflections.json' 
+        with open(jsonfile, 'w') as outfile:
+            json.dump(reflections, outfile, encoding='utf-8', indent=2)
+         
+        self.N = len(reflections['results'])
+        print "total number of relfections:", self.N
+         
+        if self.N == self.old_N: #no need to summary
+            return
+         
+        self.old_N = self.N
+         
+        #run senna
+        os.system('python CourseMirror_Survey.py ' + str(cid) + ' ' +  str(max_lecture))
+          
+        cmd = 'cmd /C "runSennaCourseMirror.bat '+str(cid)+ ' ' + str(max_lecture) + '"'
+        os.system(cmd)
+             
+        #     . extract phrases (CourseMirror_phrasebasedShallowSummary.py)
+        cmd = 'python CourseMirror_phrasebasedShallowSummary.py ' + str(cid) + ' ' +  str(max_lecture)
+        print cmd
+        os.system(cmd)
+            
+        #     . get PhraseMead input (CourseMirror_MeadPhrase.py)
+        cmd = 'python CourseMirror_MeadPhrase.py ' + str(cid) + ' ' +  str(max_lecture)
+        print cmd
+        os.system(cmd)
+        
+        olddir = os.path.dirname(os.path.realpath(__file__))
+        
+        #     . get PhraseMead output
+        meaddir = '/cygdrive/e/project/Fall2014/summarization/mead/bin/'
+        cmd = './get_mead_summary_phrase_coursemirror.sh ' + str(cid) + ' ' +  str(max_lecture)
+        os.chdir(meaddir)
+        retcode = subprocess.call([cmd], shell=True)
+        print retcode
+        #subprocess.call("exit 1", shell=True)
+        
+        os.chdir(olddir)
+        #     . get LSA results (CourseMirrorphrase2phraseSimilarity.java)
+        cmd = 'cmd /C "runLSA.bat '+str(cid)+ ' ' + str(max_lecture) + '"'
+        os.system(cmd)
+         
         #     . get ClusterARank (CourseMirror_phraseClusteringbasedShallowSummaryKmedoid-New-Malformed-LexRank.py)
-        #os.system("python CourseMirror_phraseClusteringbasedShallowSummaryKmedoid-New-Malformed-LexRank.py")
+        cmd = "python CourseMirror_ClusterARank.py " + str(cid) + ' ' +  str(max_lecture)
+        print cmd
+        os.system(cmd)
         
         #     . submit Summary (SummaryUpdate.py)
+        self.upload_summary(cid)
         
-        
-        #run mead
-        
-        #run Similar
-        
-        #run ClusterA
-    
     def test(self):
         #self.get_max_lecture_num('IE256')
         #self.get_data(Reflection, 'NAACL2015')
-        pass
-        
-    def change_demo_user(self):
-        current_token = self.demo.token
+        print self.get_questions('NAACL2015')
+#         try:
+#             summary = Summarization.Query.get(cid='PHYSs0175', lecture_number= 41, method='ClusterARank')
+#         except parse_rest.query.QueryResourceDoesNotExist:
+#             pass
+        #print summary.cid, summary.q1_summaries
+    
+    def change_demo_user(self, cid='NAACL2015'):
+        demo_user = User.login("demo", "demo")
         
         regex = re.compile("([a-z])(\d+)")
         
-        gs = regex.findall(current_token)
+        gs = regex.findall(demo_user.token)
         
         new_tokens = []
         if gs:
@@ -167,8 +252,11 @@ class CourseMIRROR:
                 else:
                     new_tokens.append('"' +g[0] + g[1] + '"')
         
-        self.demo.token = '['+','.join(new_tokens)+']' 
-        self.demo.save()
+        demo_user.token = '['+','.join(new_tokens)+']' 
+        demo_user.save()
+        
+        self.remove_sumamry(cid)
+        
                 
 if __name__ == '__main__':
     
@@ -183,10 +271,10 @@ if __name__ == '__main__':
                                         config.get('Parse', 'PARSE_MASTER_KEY')
                                         )
     
-    #course_mirror_server.test()
+    course_mirror_server.test()
     
     #course_mirror_server.run(cid)
-    course_mirror_server.change_demo_user()
+    #course_mirror_server.change_demo_user()
     
     
     

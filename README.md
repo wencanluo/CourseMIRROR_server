@@ -6,3 +6,4 @@ The server that run automatic text summarization over the submitted students' re
 * nltk (http://www.nltk.org/)
 * mead (http://www.summarization.com/mead/)
 * ParsePy (https://github.com/dgrtwo/ParsePy)
+* biopython (http://biopython.org/)

@@ -1,5 +1,5 @@
 # CourseMIRROR_server
-After the server is started, it runs automatic text summarization over the submitted students' responses whenever there is a new submission
+After the server is started, it runs automatic text summarization over the submitted students' responses whenever there is a new submission. Tested in Windows with cygwin
 
 ## Required Software
 * python (www.python.org)

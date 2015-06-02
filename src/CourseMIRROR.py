@@ -6,10 +6,15 @@ import os
 import cmd
 from cmd import Cmd
 import subprocess
+import re
+
+from parse_rest.user import User
 
 class CourseMIRROR:
     def __init__(self, app_id, api_key, master_key):
         register(app_id, api_key)
+        
+        self.demo = User.login("demo", "demo")
     
     def get_data_top(self, table, topK, cid=None, order_by = None):
         data = {'results':[]}
@@ -143,6 +148,27 @@ class CourseMIRROR:
         #self.get_max_lecture_num('IE256')
         #self.get_data(Reflection, 'NAACL2015')
         pass
+    
+    def change_demo_user(self):
+        current_token = self.demo.token
+        
+        regex = re.compile("([a-z])(\d+)")
+        
+        gs = regex.findall(current_token)
+        
+        new_tokens = []
+        if gs:
+            for g in gs:
+                if g[0] == 'n':
+                    id = int(g[1]) + 1
+                    new_id = "%04d" % (id,)
+                    print "new user token:", new_id
+                    new_tokens.append('"' +g[0] + new_id + '"')
+                else:
+                    new_tokens.append('"' +g[0] + g[1] + '"')
+        
+        self.demo.token = '['+','.join(new_tokens)+']' 
+        self.demo.save()
                 
 if __name__ == '__main__':
     
@@ -157,9 +183,10 @@ if __name__ == '__main__':
                                         config.get('Parse', 'PARSE_MASTER_KEY')
                                         )
     
-    course_mirror_server.test()
+    #course_mirror_server.test()
     
-    course_mirror_server.run(cid)
+    #course_mirror_server.run(cid)
+    course_mirror_server.change_demo_user()
     
     
     

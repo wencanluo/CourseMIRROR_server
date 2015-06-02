@@ -15,8 +15,12 @@ if __name__ == '__main__':
                                         )
     
     #course_mirror_server.test()
-    try:
-        course_mirror_server.run(cid)
-    except Exception as e:
-        print e
-    
+    while True:
+        try:
+            import time
+            course_mirror_server.run(cid)
+            time.sleep(5)
+            
+        except Exception as e:
+            print e
+        

@@ -7,3 +7,4 @@ After the server is started, it runs automatic text summarization over the submi
 * mead (http://www.summarization.com/mead/)
 * ParsePy (https://github.com/dgrtwo/ParsePy)
 * biopython (http://biopython.org/)
+* senna (http://ml.nec-labs.com/senna/)

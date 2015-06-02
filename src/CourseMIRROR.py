@@ -148,7 +148,7 @@ class CourseMIRROR:
         #self.get_max_lecture_num('IE256')
         #self.get_data(Reflection, 'NAACL2015')
         pass
-    
+        
     def change_demo_user(self):
         current_token = self.demo.token
         

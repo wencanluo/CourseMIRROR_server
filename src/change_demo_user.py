@@ -18,8 +18,7 @@ if __name__ == '__main__':
     
     #course_mirror_server.run(cid)
     while True:
-        print "press any key to change the token for the current demo user"
-        os.system('pause')
+        ch = raw_input("press any key to change the token for the current demo user")
         
         try:
             course_mirror_server.change_demo_user()

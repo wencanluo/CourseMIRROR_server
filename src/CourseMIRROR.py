@@ -109,13 +109,18 @@ class CourseMIRROR:
             summary_Object.delete()
         except parse_rest.query.QueryResourceDoesNotExist:
             pass
-        
-        
-    def upload_summary(self, cid):
+    
+    def upload_summary(self, cid, lectures=None):
         #only sumbit the last summary
         max_lecture = self.get_max_lecture_num(cid)
         
-        for i in range(0, max_lecture):
+        if lectures:
+            sheets = lectures
+            
+        if lectures==None:
+            sheets = range(0, max_lecture)
+            
+        for i in sheets:
             lecture = i + 1
             
             path = "../data/" + str(cid) + '/mead/ClusterARank/' + str(lecture)+ '/'
@@ -170,13 +175,19 @@ class CourseMIRROR:
         
     def run(self, cid):
         max_lecture = self.get_max_lecture_num(cid)
-          
+        
         #get reflections
         reflections = self.get_reflections(cid)
         jsonfile = '../data/CourseMIRROR/reflections.json' 
         with open(jsonfile, 'w') as outfile:
             json.dump(reflections, outfile, encoding='utf-8', indent=2)
-         
+        
+        #get lectures
+        lectures = self.get_lectures(cid)
+        jsonfile = '../data/CourseMIRROR/lectures.json' 
+        with open(jsonfile, 'w') as outfile:
+            json.dump(lectures, outfile, encoding='utf-8', indent=2)
+        
         self.N = len(reflections['results'])
         print "total number of relfections:", self.N
          
@@ -222,7 +233,9 @@ class CourseMIRROR:
         os.system(cmd)
         
         #     . submit Summary (SummaryUpdate.py)
-        self.upload_summary(cid)
+        lectures=range(max_lecture-2, max_lecture-1)
+        
+        self.upload_summary(cid, lectures=lectures)
         
     def test(self):
         #self.get_max_lecture_num('IE256')
@@ -256,7 +269,6 @@ class CourseMIRROR:
         demo_user.save()
         
         self.remove_sumamry(cid)
-        
                 
 if __name__ == '__main__':
     
@@ -271,9 +283,9 @@ if __name__ == '__main__':
                                         config.get('Parse', 'PARSE_MASTER_KEY')
                                         )
     
-    course_mirror_server.test()
+    #course_mirror_server.test()
     
-    #course_mirror_server.run(cid)
+    course_mirror_server.run(cid)
     #course_mirror_server.change_demo_user()
     
     

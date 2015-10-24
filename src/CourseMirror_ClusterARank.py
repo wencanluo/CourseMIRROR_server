@@ -286,7 +286,50 @@ def GetLexRankScore(datadir, np, outputdir):
             
             output = outputdir + str(week)+ '/' + str(type) + "." + np + ".lexrankmax.dict"
             fio.SaveDict(dict, output, SortbyValueflag=True)
-                    
+
+def getDate(lectures, cid, lecture):
+    for dict in lectures['results']:
+        if dict['cid'] != cid: continue
+        if dict['number'] == lecture:
+            return dict['date']
+    
+    return ""
+
+def PrintClusterRankSummary(datadir):
+    sheets = range(0,maxWeek)
+    
+    lectures = fio.LoadDictJson('../data/CourseMIRROR/lectures.json')
+    
+    head = ['week', 'data', 'Point of Interest', "Muddiest Point"]
+    body = []
+    
+    for i, sheet in enumerate(sheets):        
+        row = []
+        week = i + 1
+        
+        row.append(week)
+        row.append(getDate(lectures, course, week))
+        
+        for type in ['q1', 'q2', 'q3', 'q4']:
+            path = datadir + str(i+1)+ '/'
+            summaryfile = path + type + '.summary'
+            if not fio.IsExist(summaryfile): continue
+            
+            summaries = [line.strip() for line in fio.ReadFile(summaryfile)]
+            
+            sourcefile = path + type + '.summary.source'
+            sources = [line.split(',') for line in fio.ReadFile(sourcefile)]
+            
+            combinedSummary = []
+            for j, (summary, source) in enumerate(zip(summaries, sources)):
+                summary = summary.replace('"', '\'')
+                combinedSummary.append(str(j+1) + ") " + summary + " [" + str(len(source)) + "]")
+            
+            row.append('"' + chr(10).join(combinedSummary)+ '"') 
+        
+        body.append(row)
+    fio.WriteMatrix(datadir + "summary.txt", body, head)
+                        
 if __name__ == '__main__':
     course = sys.argv[1]
     maxWeek = int(sys.argv[2])
@@ -306,8 +349,10 @@ if __name__ == '__main__':
             for np in ['syntax']:
                 for lex in ['lexrankmax']:
                     datadir = "../data/"+course+ '/mead/'+"ClusterARank/"   
-                    fio.DeleteFolder(datadir)
-                    ShallowSummary(excelfile, datadir, sennadir, clusterdir, K=4, method=method, ratio=ratio, np=np, lex=lex)
-
+                    #fio.DeleteFolder(datadir)
+                    #ShallowSummary(excelfile, datadir, sennadir, clusterdir, K=5, method=method, ratio=ratio, np=np, lex=lex)
+    
+                    PrintClusterRankSummary(datadir)
+    
     print "done"
     

@@ -152,7 +152,7 @@ if __name__ == '__main__':
     clusterdir = "../data/"+course+"/np/"
     
     datadir = "../data/"+course+ '/mead/' +"NPSoft/" 
-    ShallowSummary(excelfile, datadir, sennadir, tfidfdir=None, np="syntax", method=None, K=4)
+    ShallowSummary(excelfile, datadir, sennadir, tfidfdir=None, np="syntax", method=None, K=5)
     
     ExtractNP(datadir, clusterdir, 'syntax', range(0, maxWeek))
         

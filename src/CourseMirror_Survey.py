@@ -3,6 +3,8 @@ import re
 import fio
 import json
 import NLTKWrapper
+import os
+from collections import defaultdict
 
 filters = ["?", "[blank]", 'n/a', 'blank',] #'none', "no", "nothing"
 
@@ -94,7 +96,7 @@ def getStudentResponseList(excelfile, cid, lecture, type, withSource=False):
     else:
         return [summary[0] for summary in student_summaryList]
     
-def getStudentResponses4Senna(excelfile, datadir):
+def getStudentResponses4Senna(excelfile, cid, maxWeek, datadir):
     sheets = range(1, maxWeek+1)
     
     for sheet in sheets:
@@ -107,13 +109,107 @@ def getStudentResponses4Senna(excelfile, datadir):
             filename = datadir + "senna." + str(week) + "." + type + ".input"
             
             fio.SaveList(student_summaryList, filename)
-       
+
+def getStudentResponses4Annotation(excelfile, cid, datadir):
+    sheets = range(1, maxWeek+1)
+    
+    for i, sheet in enumerate(sheets):
+        week = i
+        
+        for type in ['q1', 'q2', 'q3', 'q4']:
+            head = ['student_id', 'sentence_id', 'responses']
+            body = []
+        
+            student_summaryList = getStudentResponseList(excelfile, cid, week, type, True)
+            if len(student_summaryList) == 0: continue
+            
+            filename = datadir + "response." + str(week) + "." + type + ".txt"
+            
+            old = ""
+            i = 1
+            for summary,id in student_summaryList:
+                row = []
+                summary = summary.replace('"', '\'')
+                if len(summary.strip()) == 0: continue
+                
+                if id == old:
+                    row.append(" ")
+                else:
+                    row.append(id)
+                row.append(i)
+                row.append(summary)
+                body.append(row)
+                i = i + 1
+                old = id
+                
+            fio.WriteMatrix(filename, body, head)
+
+
+def PrepareIE256():
+    cid = "IE256"
+    maxWeek = 25
+    
+    excelfile = "../data/CourseMirror/Reflection.json"
+    sennadir = "../../AbstractPhraseSummarization/data/IE256/senna/"
+    
+    #fio.NewPath(sennadir)
+    #getStudentResponses4Senna(excelfile, cid, maxWeek, sennadir)
+    
+    outdirs = [#'../../AbstractPhraseSummarization/data/IE256/ILP_Baseline_Sentence/',
+               #'../../AbstractPhraseSummarization/data/IE256/MC/',
+               #'../../AbstractPhraseSummarization/data/IE256/ILP_Sentence_MC/',
+               '../../AbstractPhraseSummarization/data/IE256/ILP_Sentence_Supervised_FeatureWeightingAveragePerceptron/',
+               
+               ]
+    
+    sheets = range(1, maxWeek+1)
+    
+    for outdir in outdirs:
+        for sheet in sheets:
+            week = sheet
+    
+            for type in ['q1', 'q2', 'q3', 'q4']:
+                student_summaryList = getStudentResponseList(excelfile, cid, week, type, True)
+                if len(student_summaryList) == 0: continue
+                
+                path = os.path.join(outdir, str(week))
+                fio.NewPath(path)
+                
+                source = {}
+                responses = []
+                count = defaultdict(int)
+                for response, student in student_summaryList:
+                    responses.append(response)
+                    count[response] += 1
+                    
+                    if response not in source:
+                        source[response] = []
+                    source[response].append(student)
+                    
+                outout = os.path.join(path, type + ".sentence.key")
+                fio.SaveList(set(responses), outout)
+                
+                output = os.path.join(path, type + '.sentence.keys.source')
+                fio.SaveDict2Json(source, output)
+                
+                output = os.path.join(path, type + '.sentence.dict')
+                fio.SaveDict(count, output)
+    #write human summary
+                   
 if __name__ == '__main__':
+    #PrepareIE256()
+    #exit(0)
+    
     cid = sys.argv[1]
     maxWeek = int(sys.argv[2])
     
     excelfile = "../data/CourseMirror/reflections.json"
+    annotation_dir = "../data/Annotation/" + cid + '/'
     sennadir = "../data/"+cid+"/senna/"
     fio.NewPath(sennadir)
-    getStudentResponses4Senna(excelfile, sennadir)
+    getStudentResponses4Senna(excelfile, cid, maxWeek, sennadir)
+    
+    fio.NewPath(annotation_dir)
+    getStudentResponses4Annotation(excelfile, cid, annotation_dir)
+    
     

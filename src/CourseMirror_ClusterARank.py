@@ -173,7 +173,9 @@ def getShallowSummary(excelfile, folder, sennadatadir, clusterdir, K=30, method=
             sourcedict = {}
             
             #for np, id in zip(NPCandidates, sources):
-
+            
+            if not fio.IsExist(output): continue
+            
             body = fio.ReadMatrix(output, False)
             
             lexfile = clusterdir + str(week)+ '/' + str(type) + "." + np + "."+lex+".dict"
@@ -349,8 +351,8 @@ if __name__ == '__main__':
             for np in ['syntax']:
                 for lex in ['lexrankmax']:
                     datadir = "../data/"+course+ '/mead/'+"ClusterARank/"   
-                    #fio.DeleteFolder(datadir)
-                    #ShallowSummary(excelfile, datadir, sennadir, clusterdir, K=5, method=method, ratio=ratio, np=np, lex=lex)
+                    fio.DeleteFolder(datadir)
+                    ShallowSummary(excelfile, datadir, sennadir, clusterdir, K=5, method=method, ratio=ratio, np=np, lex=lex)
     
                     PrintClusterRankSummary(datadir)
     

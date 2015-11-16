@@ -16,5 +16,8 @@ class Reflection(Object):
 class Summarization(Object):
     pass
 
+class IE312TokenName(Object):
+    pass
+    
 if __name__ == '__main__':
     pass

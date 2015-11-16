@@ -48,7 +48,7 @@ class CourseMIRROR:
                
         return data
     
-    def get_data(self, table, cid=None, order_by = None):
+    def get_data(self, table, cid=None, order_by = None, withtime=False):
         data = {'results':[]}
 
         if cid == None:
@@ -69,7 +69,8 @@ class CourseMIRROR:
             for row in page:
                 dict = {}
                 for key in row.__dict__.keys():
-                    if key in ['_created_at', '_updated_at']: continue
+                    if not withtime:
+                        if key in ['_created_at', '_updated_at']: continue
                     dict[key] = row.__dict__[key]
             
                 data['results'].append(dict)
@@ -81,7 +82,15 @@ class CourseMIRROR:
                 break
             
         return data
-
+    
+    def print_data(self, table, cid=None):
+        data = self.get_data(table, cid, withtime=True)
+        
+        for dict in data['results']:
+            for key in dict.keys():
+                print dict[key], '\t',
+            print
+    
     def get_lectures(self, cid=None):
         return self.get_data(Lecture, cid)
     
@@ -246,7 +255,7 @@ class CourseMIRROR:
 #         except parse_rest.query.QueryResourceDoesNotExist:
 #             pass
         #print summary.cid, summary.q1_summaries
-    
+        
     def change_demo_user(self, cid='NAACL2015'):
         demo_user = User.login("demo", "demo")
         
@@ -286,6 +295,9 @@ if __name__ == '__main__':
     #course_mirror_server.test()
     
     course_mirror_server.run(cid)
+    
+    #course_mirror_server.print_data(IE312TokenName, cid=None)
+    
     #course_mirror_server.change_demo_user()
     
     

@@ -184,6 +184,7 @@ class CourseMIRROR:
         
     def run(self, cid):
         max_lecture = self.get_max_lecture_num(cid)
+        print "max_lecture", max_lecture
         
         #get reflections
         reflections = self.get_reflections(cid)
@@ -198,15 +199,17 @@ class CourseMIRROR:
             json.dump(lectures, outfile, encoding='utf-8', indent=2)
         
         self.N = len(reflections['results'])
-        print "total number of relfections:", self.N
+        print "total number of reflections:", self.N
          
         if self.N == self.old_N: #no need to summary
             return
          
         self.old_N = self.N
-         
+        
         #run senna
         os.system('python CourseMirror_Survey.py ' + str(cid) + ' ' +  str(max_lecture))
+        
+        os.system('python student_track.py ' + str(cid) + ' ' +  str(max_lecture))
           
         cmd = 'cmd /C "runSennaCourseMirror.bat '+str(cid)+ ' ' + str(max_lecture) + '"'
         os.system(cmd)

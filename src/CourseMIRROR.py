@@ -182,7 +182,7 @@ class CourseMIRROR:
             #update the object
             summary_Object.save()
         
-    def run(self, cid):
+    def run(self, cid, summarylastlecture=False):
         max_lecture = self.get_max_lecture_num(cid)
         print "max_lecture", max_lecture
         
@@ -245,7 +245,11 @@ class CourseMIRROR:
         os.system(cmd)
         
         #     . submit Summary (SummaryUpdate.py)
-        lectures=range(max_lecture-2, max_lecture-1)
+        
+        if summarylastlecture == 1:
+            lectures=range(max_lecture-2, max_lecture)
+        else:
+            lectures=range(max_lecture-2, max_lecture-1)
         
         self.upload_summary(cid, lectures=lectures)
         
@@ -285,9 +289,12 @@ class CourseMIRROR:
 if __name__ == '__main__':
     
     import ConfigParser
+    import sys
+    
+    course = sys.argv[1]
     
     config = ConfigParser.RawConfigParser()
-    config.read('../config/myconfig.cfg')
+    config.read('../config/config_'+course+'.cfg')
     
     cid = config.get('course', 'cid')
     course_mirror_server = CourseMIRROR(config.get('Parse', 'PARSE_APP_ID'), 
@@ -297,7 +304,8 @@ if __name__ == '__main__':
     
     #course_mirror_server.test()
     
-    course_mirror_server.run(cid)
+    #course_mirror_server.upload_summary('CS1635', [1])
+    course_mirror_server.run(cid, summarylastlecture=config.getint('course', 'summarylastlecture'))
     
     #course_mirror_server.print_data(IE312TokenName, cid=None)
     

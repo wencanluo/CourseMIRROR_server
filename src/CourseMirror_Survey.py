@@ -110,17 +110,18 @@ def getStudentResponses4Senna(excelfile, cid, maxWeek, datadir):
             
             fio.SaveList(student_summaryList, filename)
 
-def getStudentResponses4Annotation(excelfile, cid, datadir):
+def getStudentResponses4Annotation(excelfile, cid, maxWeek, datadir):
     sheets = range(1, maxWeek+1)
     
-    for i, sheet in enumerate(sheets):
-        week = i
+    for sheet in sheets:
+        week = sheet
         
         for type in ['q1', 'q2', 'q3', 'q4']:
             head = ['student_id', 'sentence_id', 'responses']
             body = []
         
             student_summaryList = getStudentResponseList(excelfile, cid, week, type, True)
+            
             if len(student_summaryList) == 0: continue
             
             filename = datadir + "response." + str(week) + "." + type + ".txt"
@@ -210,6 +211,6 @@ if __name__ == '__main__':
     getStudentResponses4Senna(excelfile, cid, maxWeek, sennadir)
     
     fio.NewPath(annotation_dir)
-    getStudentResponses4Annotation(excelfile, cid, annotation_dir)
+    getStudentResponses4Annotation(excelfile, cid, maxWeek, annotation_dir)
     
     

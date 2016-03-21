@@ -145,6 +145,32 @@ def getStudentResponses4Annotation(excelfile, cid, maxWeek, datadir):
                 
             fio.WriteMatrix(filename, body, head)
 
+def getStudentResponses4Quality(excelfile, cid, maxWeek, datadir):
+    sheets = range(1, maxWeek+1)
+    
+    for sheet in sheets:
+        week = sheet
+        
+        for type in ['q1', 'q2', 'q3', 'q4']:
+            head = ['student_id', 'responses']
+            body = []
+        
+            student_summaries = getStudentResponse(excelfile, cid, week, type)
+            if len(student_summaries) == 0: continue
+            
+            for id, summaryList in student_summaries.items():
+                summary = ' '.join(summaryList)
+                
+                row = []
+                summary = summary.replace('"', '\'')
+                if len(summary.strip()) == 0: continue
+                
+                row.append(id)
+                row.append(summary)
+                body.append(row)
+            
+            filename = datadir + "response." + str(week) + "." + type + ".txt"
+            fio.WriteMatrix(filename, body, head)
 
 def PrepareIE256():
     cid = "IE256"
@@ -212,5 +238,9 @@ if __name__ == '__main__':
     
     fio.NewPath(annotation_dir)
     getStudentResponses4Annotation(excelfile, cid, maxWeek, annotation_dir)
+    
+    quality_dir = "../data/" + cid + '/quality/'
+    fio.NewPath(quality_dir)
+    getStudentResponses4Quality(excelfile, cid, maxWeek, quality_dir)
     
     

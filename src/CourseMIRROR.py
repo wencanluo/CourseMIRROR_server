@@ -10,16 +10,20 @@ from cmd import Cmd
 import subprocess
 import re
 import fio
+import gmail
 
 TypeMap = {"q1":'q1_summaries', "q2":'q2_summaries', "q3":'q3_summaries', "q4":'q4_summaries'}
+TypeMapReverse = {"q1_summaries":'Point of Interest', "q2_summaries":'Muddiest Point', "q3_summaries":'Learning Point'}
 
 from parse_rest.user import User
 
 class CourseMIRROR:
-    def __init__(self, app_id, api_key, master_key):
+    def __init__(self, app_id, api_key, master_key, config=None):
         register(app_id, api_key)
-
+        
         self.old_N = 0
+        self.config = config
+        self.email_from = 'wencanluo.cn@gmail.com'
     
     def get_data_top(self, table, topK, cid=None, order_by = None):
         data = {'results':[]}
@@ -119,9 +123,19 @@ class CourseMIRROR:
         except parse_rest.query.QueryResourceDoesNotExist:
             pass
     
+    def getDate(self, lectures, cid, lecture):
+        for dict in lectures['results']:
+            if dict['cid'] != cid: continue
+            if dict['number'] == lecture:
+                return dict['date']
+        
+        return ""
+
     def upload_summary(self, cid, lectures=None):
         #only sumbit the last summary
         max_lecture = self.get_max_lecture_num(cid)
+        
+        lectures_json = fio.LoadDictJson('../data/CourseMIRROR/lectures.json')
         
         if lectures:
             sheets = lectures
@@ -181,6 +195,33 @@ class CourseMIRROR:
             
             #update the object
             summary_Object.save()
+            
+            try:
+                email_to = config.get('email', 'to')
+                
+                email_tos = [email_address.strip() for email_address in email_to.split(',')]
+                
+                lecture_date = self.getDate(lectures_json, cid, lecture)
+                
+                subject = 'Automatic Summary for Lecture ' + lecture_date
+                
+                content = []
+                for key in dict:
+                    content.append(TypeMapReverse[key])
+                    for i, (text, weight) in enumerate(zip(dict[key]['summaryText'], dict[key]['weight'])):
+                        summary = "%d) %s [%d]" % (i+1, text, weight)
+                        content.append(summary)
+                    content.append('\n')
+                
+                content = '\n'.join(content)
+                print subject, self.email_from, email_tos, content
+                
+                gmail.send_email(subject, self.email_from, email_tos, content)
+                
+            except Exception as e:
+                print e
+                continue
+            
         
     def run(self, cid, summarylastlecture=False):
         max_lecture = self.get_max_lecture_num(cid)
@@ -299,14 +340,16 @@ if __name__ == '__main__':
     cid = config.get('course', 'cid')
     course_mirror_server = CourseMIRROR(config.get('Parse', 'PARSE_APP_ID'), 
                                         config.get('Parse', 'PARSE_REST_API_KEY'), 
-                                        config.get('Parse', 'PARSE_MASTER_KEY')
+                                        config.get('Parse', 'PARSE_MASTER_KEY'),
+                                        config
                                         )
     
     #course_mirror_server.test()
     
     #course_mirror_server.upload_summary('CS1635', [1])
     #course_mirror_server.upload_summary('CS0445', [15])
-    course_mirror_server.run(cid, summarylastlecture=config.getint('course', 'summarylastlecture'))
+    course_mirror_server.upload_summary('IE256_2016', [11])
+    #course_mirror_server.run(cid, summarylastlecture=config.getint('course', 'summarylastlecture'))
     
     #course_mirror_server.print_data(IE312TokenName, cid=None)
     

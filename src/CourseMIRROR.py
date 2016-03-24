@@ -196,6 +196,8 @@ class CourseMIRROR:
             #update the object
             summary_Object.save()
             
+            if lecture != max_lecture: continue
+            
             try:
                 email_to = config.get('email', 'to')
                 

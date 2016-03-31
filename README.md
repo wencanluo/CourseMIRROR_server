@@ -6,8 +6,10 @@ After the server is started, it runs automatic text summarization over the submi
 * nltk (http://www.nltk.org/)
 * mead (http://www.summarization.com/mead/)
 * ParsePy (https://github.com/dgrtwo/ParsePy)
-*   pip install git+https://github.com/dgrtwo/ParsePy.git
+  pip install git+https://github.com/dgrtwo/ParsePy.git  
 
 * biopython (http://biopython.org/)
+  pip install biopython
+
 * senna (http://ml.nec-labs.com/senna/)
 * 

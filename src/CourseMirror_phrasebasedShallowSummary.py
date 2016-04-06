@@ -147,7 +147,7 @@ if __name__ == '__main__':
     maxWeek = int(sys.argv[2])
     
     sennadir = "../data/"+course+"/senna/"
-    excelfile = "../data/CourseMIRROR/reflections.json"
+    excelfile = "../data/CourseMirror/reflections.json"
             
     clusterdir = "../data/"+course+"/np/"
     

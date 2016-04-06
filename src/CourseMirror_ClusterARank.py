@@ -300,7 +300,7 @@ def getDate(lectures, cid, lecture):
 def PrintClusterRankSummary(datadir):
     sheets = range(0,maxWeek)
     
-    lectures = fio.LoadDictJson('../data/CourseMIRROR/lectures.json')
+    lectures = fio.LoadDictJson('../data/CourseMirror/lectures.json')
     
     head = ['week', 'data', 'Point of Interest', "Muddiest Point"]
     body = []
@@ -337,7 +337,7 @@ if __name__ == '__main__':
     maxWeek = int(sys.argv[2])
     
     sennadir = "../data/"+course+"/senna/"
-    excelfile = "../data/CourseMIRROR/reflections.json"
+    excelfile = "../data/CourseMirror/reflections.json"
               
     clusterdir = "../data/"+course+"/np/"
     fio.NewPath(clusterdir)

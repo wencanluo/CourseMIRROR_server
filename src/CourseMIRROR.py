@@ -11,6 +11,7 @@ import subprocess
 import re
 import fio
 import gmail
+from subprocess import call
 
 TypeMap = {"q1":'q1_summaries', "q2":'q2_summaries', "q3":'q3_summaries', "q4":'q4_summaries'}
 TypeMapReverse = {"q1_summaries":'Point of Interest', "q2_summaries":'Muddiest Point', "q3_summaries":'Learning Point'}
@@ -135,7 +136,7 @@ class CourseMIRROR:
         #only sumbit the last summary
         max_lecture = self.get_max_lecture_num(cid)
         
-        lectures_json = fio.LoadDictJson('../data/CourseMIRROR/lectures.json')
+        lectures_json = fio.LoadDictJson('../data/CourseMirror/lectures.json')
         
         if lectures:
             sheets = lectures
@@ -231,13 +232,13 @@ class CourseMIRROR:
         
         #get reflections
         reflections = self.get_reflections(cid)
-        jsonfile = '../data/CourseMIRROR/reflections.json' 
+        jsonfile = '../data/CourseMirror/reflections.json' 
         with open(jsonfile, 'w') as outfile:
             json.dump(reflections, outfile, encoding='utf-8', indent=2)
         
         #get lectures
         lectures = self.get_lectures(cid)
-        jsonfile = '../data/CourseMIRROR/lectures.json' 
+        jsonfile = '../data/CourseMirror/lectures.json' 
         with open(jsonfile, 'w') as outfile:
             json.dump(lectures, outfile, encoding='utf-8', indent=2)
         
@@ -252,9 +253,9 @@ class CourseMIRROR:
         #run senna
         os.system('python CourseMirror_Survey.py ' + str(cid) + ' ' +  str(max_lecture))
         
-        os.system('python student_track.py ' + str(cid) + ' ' +  str(max_lecture))
-          
-        cmd = 'cmd /C "runSennaCourseMirror.bat '+str(cid)+ ' ' + str(max_lecture) + '"'
+        #os.system('python student_track.py ' + str(cid) + ' ' +  str(max_lecture))
+        cmd = 'bash runSennaCourseMirror.sh '+str(cid)+ ' ' + str(max_lecture)
+        print(cmd)
         os.system(cmd)
              
         #     . extract phrases (CourseMirror_phrasebasedShallowSummary.py)
@@ -270,7 +271,7 @@ class CourseMIRROR:
         olddir = os.path.dirname(os.path.realpath(__file__))
         
         #     . get PhraseMead output
-        meaddir = '/cygdrive/e/project/Fall2014/summarization/mead/bin/'
+        meaddir = '../../mead/bin/'
         cmd = './get_mead_summary_phrase_coursemirror.sh ' + str(cid) + ' ' +  str(max_lecture)
         os.chdir(meaddir)
         retcode = subprocess.call([cmd], shell=True)
@@ -279,7 +280,7 @@ class CourseMIRROR:
         
         os.chdir(olddir)
         #     . get LSA results (CourseMirrorphrase2phraseSimilarity.java)
-        cmd = 'cmd /C "runLSA.bat '+str(cid)+ ' ' + str(max_lecture) + '"'
+        cmd = './runLSA.sh '+str(cid)+ ' ' + str(max_lecture)
         os.system(cmd)
          
         #     . get ClusterARank (CourseMirror_phraseClusteringbasedShallowSummaryKmedoid-New-Malformed-LexRank.py)

@@ -5,6 +5,13 @@ After the server is started, it runs automatic text summarization over the submi
 * python (www.python.org)
 * nltk (http://www.nltk.org/)
 * mead (http://www.summarization.com/mead/)
+   install Perl
+   cpan XML::Parser
 * ParsePy (https://github.com/dgrtwo/ParsePy)
+  pip install git+https://github.com/dgrtwo/ParsePy.git  
+
 * biopython (http://biopython.org/)
+  pip install biopython
+
 * senna (http://ml.nec-labs.com/senna/)
+* 

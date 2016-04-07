@@ -28,6 +28,7 @@ def send_email(subject, email_from, email_to, content):
     mail = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
     mail.ehlo()
     mail.starttls()
+    print '|'+SMTP_USERNAME+'|'+SMTP_PASSWORD+'|'
     mail.login(SMTP_USERNAME, SMTP_PASSWORD)
     mail.sendmail(email_from, email_to, msg.as_string())
     mail.quit()

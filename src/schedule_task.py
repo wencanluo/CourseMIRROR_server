@@ -43,28 +43,29 @@ if __name__ == '__main__':
         weekday = t.isoweekday()
         hour = t.hour
         
+        print weekday, hour
         for cid in courses:
             if weekday in courses[cid]:
                 if hour >= courses[cid][weekday]:
                     print "time now for %s" %cid
              
-            #get the deadline
-            max_lecture = course_mirror_server.get_max_lecture_num(cid)
-            print(max_lecture)
-            
-            #run the summarization algorithm
-            #whether there is a summary
-            
-            try:
-                query = Summarization.Query.filter(cid=cid, lecture_number=max_lecture)
-                if len(query) == 0:
-                    os.system('python CourseMIRROR.py %s'%cid)
-                    time.sleep(600)
-                
-            except Exception as e:
-                pass
-            
-            print 'done'
+                    #get the deadline
+                    max_lecture = course_mirror_server.get_max_lecture_num(cid)
+                    print(max_lecture)
+                    
+                    #run the summarization algorithm
+                    #whether there is a summary
+                    
+                    try:
+                        query = Summarization.Query.filter(cid=cid, lecture_number=max_lecture)
+                        if len(query) == 0:
+                            os.system('python CourseMIRROR.py %s'%cid)
+                            time.sleep(600)
+                        
+                    except Exception as e:
+                        pass
+                    
+                    print 'done'
         
         print('it will run in 5mins later')
         time.sleep(600)

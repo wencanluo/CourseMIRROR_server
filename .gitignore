@@ -2,6 +2,7 @@
 /.pydevproject
 /.project
 WordNet-JWI
+config/*.cfg
 /src/optimalLSA.jar
 /src/SavedHashMaps.list
 /src/stop-words.txt

@@ -61,6 +61,8 @@ def RankStudentbyName(excelfile, nameids, cid, output):
         try:
             token = inst[tokenIndex].lower().strip()
             courseNow = inst[couseIndex].strip()
+            lecture_number = inst['lecture_number']
+            if lecture_number in [1, 2, 3, 15]: continue
             
             if courseNow != cid: continue
             
@@ -75,11 +77,12 @@ def RankStudentbyName(excelfile, nameids, cid, output):
     name_ids = fio.LoadDictJson(nameids)['results']
 
     sys.stdout = codecs.open(output, 'w', 'utf-8')
+    
     for token, count in dict.items():
         #find the name
         name = find_name(token, name_ids)
         name_dict[name] = count
-        print name, '\t', count  
+        print token, '\t', name, '\t', count  
     
     
 def getStudentResponses4Summary(excelfile, ranked, cid, maxWeek, datadir):
@@ -134,16 +137,16 @@ def getStudentResponses4Summary(excelfile, ranked, cid, maxWeek, datadir):
 if __name__ == '__main__':
     excelfile = "../data/CourseMirror/reflections.json"
     
-    ranked = "../data/CourseMirror/rank2.json"
-    nameids = "../data/CourseMirror/IE312TokenName.json"
-    RankStudentbyName(excelfile, nameids, 'IE312', ranked)
+    ranked = "../data/CourseMirror/rank_CS0445.json"
+    nameids = "../data/CourseMirror/CS0445TokenName.json"
+    RankStudentbyName(excelfile, nameids, 'CS0445', ranked)
     
-    cid = sys.argv[1]
-    maxWeek = int(sys.argv[2])
+#     cid = sys.argv[1]
+#     maxWeek = int(sys.argv[2])
      
 #     cid = "IE312"
 #     maxWeek = 26
 #     
-    datadir = "../data/IE312/response/"
-    fio.NewPath(datadir)
-    getStudentResponses4Summary(excelfile, ranked, cid, maxWeek, datadir)
+#     datadir = "../data/IE312/response/"
+#     fio.NewPath(datadir)
+#     getStudentResponses4Summary(excelfile, ranked, cid, maxWeek, datadir)

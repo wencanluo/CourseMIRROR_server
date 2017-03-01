@@ -36,15 +36,11 @@ def NormalizeResponse(response):
     if k == -1:
         return response
     return response[:k]
-            
-def getStudentResponse(excelfile, cid, lecture_number, type):
+ 
+def getStudentResponseFromJson(jsonObject, cid, lecture_number, type):
     '''
-    return a dictionary of the students' summary, with the student id as a key
-    The value is a list with each sentence an entry
+    return {user:[responses]}
     '''
-    f = open(excelfile)
-    reflections = json.load(f)['results']
-    f.close()
     
     tokenIndex = 'user'
     couseIndex = 'cid'
@@ -54,7 +50,7 @@ def getStudentResponse(excelfile, cid, lecture_number, type):
     
     key = type
         
-    for k, inst in enumerate(reflections):
+    for k, inst in enumerate(jsonObject['results']):
         try:
             token = inst[tokenIndex].lower().strip()
             courseNow = inst[couseIndex].strip()
@@ -64,6 +60,8 @@ def getStudentResponse(excelfile, cid, lecture_number, type):
             if lecture_number != lecture: continue
             
             if len(token) > 0:
+                if key not in inst: continue
+                
                 content = inst[key].strip()
                 if content.lower() in filters: continue
                 if len(content) > 0:   
@@ -72,16 +70,28 @@ def getStudentResponse(excelfile, cid, lecture_number, type):
                     
                     summary = [s.strip() for s in summary]
                     
-                    if token in summaries:
-                        summaries[token] += summary
-                    else:
-                        summaries[token] = summary
+                    #if token in summaries:
+                    #    summaries[token] += summary
+                    #else:
+                    #    summaries[token] = summary
+                    summaries[token] = summary
             else:
                 break
         except Exception as e:
             print e
             return summaries
     return summaries
+               
+def getStudentResponse(excelfile, cid, lecture_number, type):
+    '''
+    return a dictionary of the students' summary, with the student id as a key
+    The value is a list with each sentence an entry
+    '''
+    f = open(excelfile)
+    reflections = json.load(f)
+    f.close()
+    
+    return getStudentResponseFromJson(reflections, cid, lecture_number, type)
 
 def getStudentResponseList(excelfile, cid, lecture, type, withSource=False):
     student_summaries = getStudentResponse(excelfile, cid, lecture, type)

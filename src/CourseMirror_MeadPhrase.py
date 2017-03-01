@@ -15,13 +15,17 @@ def WriteDocsent(excelfile, folder, sennadatadir, np=None):
         
         for type in ['q1', 'q2', 'q3', 'q4']:
             student_summaryList = CourseMirror_Survey.getStudentResponseList(excelfile, course, week, type, withSource=True)
-            if len(student_summaryList) == 0: continue
+            if len(student_summaryList) == 0: 
+                print week, type
+                continue
             
             ids = [summary[1] for summary in student_summaryList]
             summaries = [summary[0] for summary in student_summaryList] 
                             
             sennafile = sennadatadir + "senna." + str(week) + "." + type + '.output'
-            if not fio.IsExist(sennafile): continue
+            if not fio.IsExist(sennafile): 
+                print sennafile
+                continue
             
             sentences = SennaParser.SennaParse(sennafile)
             

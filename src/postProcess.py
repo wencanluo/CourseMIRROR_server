@@ -13,6 +13,8 @@ def getTopRankPhrase(NPs, clusterids, cid, lexdict, sources):
     
     for NP, id, source in zip(NPs, clusterids, sources):
         if int(id) == cid:
+            if NP.lower() not in lexdict: continue
+            
             dict[NP] = lexdict[NP.lower()]
             s.append(source)
     

@@ -11,8 +11,10 @@ import subprocess
 import re
 import fio
 import gmail
+import CourseMirror_Survey
 
 TypeMap = {"q1":'q1_summaries', "q2":'q2_summaries', "q3":'q3_summaries', "q4":'q4_summaries'}
+NameMap = {"q1":'Point of Interest', "q2":'Muddiest Point', "q3":'Learning Point'}
 TypeMapReverse = {"q1_summaries":'Point of Interest', "q2_summaries":'Muddiest Point', "q3_summaries":'Learning Point'}
 
 from parse_rest.user import User
@@ -130,27 +132,31 @@ class CourseMIRROR:
                 return dict['date']
         
         return ""
-
+    
     def upload_summary(self, cid, lectures=None):
         #only sumbit the last summary
         max_lecture = self.get_max_lecture_num(cid)
         
         lectures_json = fio.LoadDictJson('../data/CourseMIRROR/lectures.json')
+        response_json = fio.LoadDictJson('../data/CourseMIRROR/reflections.json')
+        questions = self.get_questions(cid)
         
         if lectures:
             sheets = lectures
             
         if lectures==None:
             sheets = range(0, max_lecture)
-            
+        
         for i in sheets:
+            print sheets
+            
             lecture = i + 1
             
             path = "../data/" + str(cid) + '/mead/ClusterARank/' + str(lecture)+ '/'
             if not fio.IsExistPath(path): continue
             
             dict = {}
-            for q in self.get_questions(cid):
+            for q in questions:
                 filename = path + q + '.summary'
                 if not fio.IsExist(filename): continue
                 
@@ -196,6 +202,8 @@ class CourseMIRROR:
             #update the object
             summary_Object.save()
             
+            print "summary updated"
+            
             if lecture != max_lecture: continue
             
             try:
@@ -208,23 +216,67 @@ class CourseMIRROR:
                 subject = 'Automatic Summary for Lecture ' + lecture_date
                 
                 content = []
-                for key in dict:
+                for key in sorted(dict):
                     content.append(TypeMapReverse[key])
                     for i, (text, weight) in enumerate(zip(dict[key]['summaryText'], dict[key]['weight'])):
                         summary = "%d) %s [%d]" % (i+1, text, weight)
                         content.append(summary)
                     content.append('\n')
                 
+                #get responses
+                for q in questions:
+                    if q not in NameMap: continue
+                    
+                    stu_responses = CourseMirror_Survey.getStudentResponseFromJson(response_json, cid, lecture, q)
+                    
+                    responses = []
+                    
+                    if len(stu_responses) > 0:
+                        responses.append('Responses for %s:'%NameMap[q])
+                        rid = 1
+                        for response in stu_responses.values():
+                            responses.append('%d\t%s'%(rid, ' '.join(response)))
+                            rid += 1
+#                             for ss in response:
+#                                 responses.append('%d\t%s'%(rid, ss))
+#                                 rid += 1
+                        responses.append('')
+                        content += responses
+                
                 content = '\n'.join(content)
-                print subject, self.email_from, email_tos, content
                 
                 gmail.send_email(subject, self.email_from, email_tos, content)
+                
+                print subject, self.email_from, email_tos, content
                 
             except Exception as e:
                 print e
                 continue
             
+    
+    def test_summary(self, cid, lectures=None):
+        #only sumbit the last summary
+        max_lecture = self.get_max_lecture_num(cid)
+        print max_lecture
         
+        lectures_json = fio.LoadDictJson('../data/CourseMIRROR/lectures.json')
+        
+        if lectures:
+            sheets = lectures
+            
+        if lectures==None:
+            sheets = range(0, max_lecture)
+            
+        for i in sheets:
+            lecture = i + 1
+            
+            #get the object
+            try:
+                summary_Object = Summarization.Query.get(cid=cid, lecture_number = lecture, method='ClusterARank')
+                print summary_Object.q1_summaries
+            except parse_rest.query.QueryResourceDoesNotExist:
+                print 'Error'
+            
     def run(self, cid, summarylastlecture=False):
         max_lecture = self.get_max_lecture_num(cid)
         print "max_lecture", max_lecture
@@ -336,6 +388,8 @@ if __name__ == '__main__':
     
     course = sys.argv[1]
     
+    #course = 'CS2610_2016'
+    
     config = ConfigParser.RawConfigParser()
     config.read('../config/config_'+course+'.cfg')
     
@@ -347,11 +401,15 @@ if __name__ == '__main__':
                                         )
     
     #course_mirror_server.test()
+    #course_mirror_server.test_summary(cid, lectures=[11])
     
     #course_mirror_server.upload_summary('CS1635', [1])
     #course_mirror_server.upload_summary('CS0445', [15])
     #course_mirror_server.upload_summary('IE256_2016', [11])
-    course_mirror_server.run(cid, summarylastlecture=config.getint('course', 'summarylastlecture'))
+    #course_mirror_server.upload_summary(cid, lectures=[4])
+    course_mirror_server.upload_summary(cid, lectures=[14])
+    
+    #course_mirror_server.run(cid, summarylastlecture=config.getint('course', 'summarylastlecture'))
     
     #course_mirror_server.print_data(IE312TokenName, cid=None)
     

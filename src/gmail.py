@@ -20,7 +20,8 @@ def send_email(subject, email_from, email_to, content):
     email_to is a list of email address
     '''
     
-    msg = MIMEText(content)
+    msg = MIMEText(content,_charset='utf-8')
+    
     #msg['Subject'] = subject + " %s" % (date.today().strftime(DATE_FORMAT))
     msg['Subject'] = subject
     msg['To'] = EMAIL_SPACE.join(email_to)

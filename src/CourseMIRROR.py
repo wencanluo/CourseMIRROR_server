@@ -1,4 +1,7 @@
 #https://github.com/dgrtwo/ParsePy
+import os
+os.environ["PARSE_API_ROOT"] = "https://coursemirror.azurewebsites.net/parse"
+
 from parse_rest.connection import register
 import parse_rest
 
@@ -10,9 +13,9 @@ from cmd import Cmd
 import subprocess
 import re
 import fio
+
 import gmail
 import CourseMirror_Survey
-
 TypeMap = {"q1":'q1_summaries', "q2":'q2_summaries', "q3":'q3_summaries', "q4":'q4_summaries'}
 NameMap = {"q1":'Point of Interest', "q2":'Muddiest Point', "q3":'Learning Point'}
 TypeMapReverse = {"q1_summaries":'Point of Interest', "q2_summaries":'Muddiest Point', "q3_summaries":'Learning Point'}
@@ -21,6 +24,7 @@ from parse_rest.user import User
 
 class CourseMIRROR:
     def __init__(self, app_id, api_key, master_key, config=None):
+        
         register(app_id, api_key)
         
         self.old_N = 0
@@ -322,7 +326,7 @@ class CourseMIRROR:
         olddir = os.path.dirname(os.path.realpath(__file__))
         
         #     . get PhraseMead output
-        meaddir = '/cygdrive/e/project/Fall2014/summarization/mead/bin/'
+        meaddir = '../../mead/bin/'
         cmd = './get_mead_summary_phrase_coursemirror.sh ' + str(cid) + ' ' +  str(max_lecture)
         os.chdir(meaddir)
         retcode = subprocess.call([cmd], shell=True)
@@ -407,7 +411,7 @@ if __name__ == '__main__':
     #course_mirror_server.upload_summary('CS0445', [15])
     #course_mirror_server.upload_summary('IE256_2016', [11])
     #course_mirror_server.upload_summary(cid, lectures=[4])
-    #course_mirror_server.upload_summary(cid, lectures=[16])
+    #course_mirror_server.upload_summary(cid, lectures=[18])
     
     course_mirror_server.run(cid, summarylastlecture=config.getint('course', 'summarylastlecture'))
     

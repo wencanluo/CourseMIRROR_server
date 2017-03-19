@@ -14,4 +14,4 @@ After the server is started, it runs automatic text summarization over the submi
   pip install biopython
 
 * senna (http://ml.nec-labs.com/senna/)
-* 
+* SEMILAR (http://www.semanticsimilarity.org/)

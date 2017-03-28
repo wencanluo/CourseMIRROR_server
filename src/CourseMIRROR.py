@@ -286,11 +286,12 @@ class CourseMIRROR:
         print "max_lecture", max_lecture
         
         #get reflections
-        reflections = self.get_reflections(cid)
+        #reflections = self.get_reflections(cid)
         jsonfile = '../data/CourseMIRROR/reflections.json' 
-        with open(jsonfile, 'w') as outfile:
-            json.dump(reflections, outfile, encoding='utf-8', indent=2)
+        #with open(jsonfile, 'w') as outfile:
+        #    json.dump(reflections, outfile, encoding='utf-8', indent=2)
         
+        reflections = fio.LoadDictJson(jsonfile)
         #get lectures
         lectures = self.get_lectures(cid)
         jsonfile = '../data/CourseMIRROR/lectures.json' 
@@ -411,7 +412,7 @@ if __name__ == '__main__':
     #course_mirror_server.upload_summary('CS0445', [15])
     #course_mirror_server.upload_summary('IE256_2016', [11])
     #course_mirror_server.upload_summary(cid, lectures=[4])
-    #course_mirror_server.upload_summary(cid, lectures=[18])
+    #course_mirror_server.upload_summary(cid, lectures=[21])
     
     course_mirror_server.run(cid, summarylastlecture=config.getint('course', 'summarylastlecture'))
     

@@ -109,8 +109,8 @@ def Write2Mead(excelfile, datadir, sennadatadir, np=None):
                 
 if __name__ == '__main__':
     
-    course = sys.argv[1]
-    maxWeek = int(sys.argv[2])
+    course = 'Engineer'
+    maxWeek = 12
 
     sennadir = "../data/"+course+"/senna/"
     reflections = "../data/CourseMIRROR/reflections.json"
@@ -123,38 +123,43 @@ if __name__ == '__main__':
     #CourseMirror_Survey.getStudentResponses4Mari(reflections, course, maxWeek, maridir_datadir)
     #exit(-1)
     
-    for np in ['syntax']:
-        datadir = "../data/"+course+ '/mead/' + "PhraseMead/"
-        fio.DeleteFolder(datadir)
-        Write2Mead(reflections, datadir, sennadir, np=np)
-     
-    exit(-1)
+#     for np in ['syntax']:
+#         datadir = "../data/"+course+ '/mead/' + "PhraseMead/"
+#         fio.DeleteFolder(datadir)
+#         Write2Mead(reflections, datadir, sennadir, np=np)
+#     
+#     exit(-1)
 #     
 #    
-    for np in ['sentence']:
-        datadir = "../data/"+course+ '/mead/' + "OriMead/"
-        Write2Mead(reflections, datadir, sennadir, np=np)
-     
-    for np in ['syntax']:
-        datadir = "../data/"+course+ '/mead/' + "Mead/"
-        Write2Mead(reflections, datadir, sennadir, np=np)
-     
-    for np in ['syntax']:
-        datadir = "../data/"+course+ '/mead/' + "MeadMMR/"
-        Write2Mead(reflections, datadir, sennadir, np=np)
-     
-    for np in ['syntax']:
-        datadir = "../data/"+course+ '/mead/' + "LexRank/"
-        Write2Mead(reflections, datadir, sennadir, np=np)
-     
-    for np in ['syntax']:
-        datadir = "../data/"+course+ '/mead/' + "LexRankMMR/"
-        Write2Mead(reflections, datadir, sennadir, np=np)
-      
+#     for np in ['sentence']:
+#         datadir = "../data/"+course+ '/mead/' + "OriMead/"
+#         fio.DeleteFolder(datadir)
+#         Write2Mead(reflections, datadir, sennadir, np=np)
+#     
+#     for np in ['syntax']:
+#         datadir = "../data/"+course+ '/mead/' + "Mead/"
+#         fio.DeleteFolder(datadir)
+#         Write2Mead(reflections, datadir, sennadir, np=np)
+#     
+#     for np in ['syntax']:
+#         datadir = "../data/"+course+ '/mead/' + "MeadMMR/"
+#         fio.DeleteFolder(datadir)
+#         Write2Mead(reflections, datadir, sennadir, np=np)
+#     
+#     for np in ['syntax']:
+#         datadir = "../data/"+course+ '/mead/' + "LexRank/"
+#         fio.DeleteFolder(datadir)
+#         Write2Mead(reflections, datadir, sennadir, np=np)
+#     
+#     for np in ['syntax']:
+#         datadir = "../data/"+course+ '/mead/' + "LexRankMMR/"
+#         fio.DeleteFolder(datadir)
+#         Write2Mead(reflections, datadir, sennadir, np=np)
+#      
     #Step5: get PhraseMead output
     #     . get PhraseMead output
     meaddir = '../../mead/bin/'
-    cmd = './get_phrasemead_all.sh ' + str(course) + ' ' +  str(maxWeek)
+    cmd = './get_phrasemead_all_eng.sh ' + str(course) + ' ' +  str(maxWeek)
     os.chdir(meaddir)
     retcode = subprocess.call([cmd], shell=True)
     print retcode

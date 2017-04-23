@@ -121,14 +121,12 @@ class CourseMIRROR:
         return reflection[0]['lecture_number']
     
     def get_max_lecture_num_from_relection(self, cid, reflections):
-        
         max_lec = None
         couseIndex = 'cid'
         lectureIndex = 'lecture_number'
         for k, inst in enumerate(reflections['results']):
             try:
                 courseNow = inst[couseIndex].strip()
-                print courseNow
                 lecture = inst[lectureIndex]
                 
                 if courseNow != cid: continue
@@ -159,76 +157,21 @@ class CourseMIRROR:
     
     def upload_summary(self, cid, lectures=None):
         #only sumbit the last summary
-        max_lecture = self.get_max_lecture_num(cid)
-        
         lectures_json = fio.LoadDictJson('../data/CourseMIRROR/lectures.json')
         response_json = fio.LoadDictJson('../data/CourseMIRROR/reflections.json')
-        questions = self.get_questions(cid)
+        questions = ['q1', 'q2']
+        
+        max_lecture = self.get_max_lecture_num_from_relection(cid, response_json)
+        
+        if max_lecture == None: return
         
         if lectures:
             sheets = lectures
             
-        if lectures==None:
-            sheets = range(0, max_lecture)
-        
         for i in sheets:
             print sheets
             
             lecture = i + 1
-            
-            path = "../data/" + str(cid) + '/mead/ClusterARank/' + str(lecture)+ '/'
-            if not fio.IsExistPath(path): continue
-            
-            dict = {}
-            for q in questions:
-                filename = path + q + '.summary'
-                if not fio.IsExist(filename): continue
-                
-                lines = fio.ReadFile(filename)
-                if len(lines) == 0: continue
-                
-                summary = []
-                weight = []
-                
-                for line in lines:
-                    summary.append(line.decode('latin-1').strip())
-                    
-                summarydict = {}
-                summarydict['summaryText'] = summary
-                
-                sourcefile = path + q + '.summary.source'
-                if not fio.IsExist(sourcefile):
-                    for s in summary:
-                        weight.append(1.0)
-                else:
-                    sources = [line.strip().split(",") for line in fio.ReadFile(sourcefile)]
-                    
-                    assert(len(sources) == len(summary))
-                    summarydict['Sources'] = sources
-                    
-                    for source in sources:
-                        weight.append(len(source))
-                    
-                summarydict['weight'] = weight
-                
-                dict[TypeMap[q]] = summarydict
-            
-            #get the object
-            try:
-                summary_Object = Summarization.Query.get(cid=cid, lecture_number = lecture, method='ClusterARank')
-            except parse_rest.query.QueryResourceDoesNotExist:
-                summary_Object = Summarization(cid=cid, lecture_number = lecture, method='ClusterARank')
-            
-            for key in dict:
-                print key
-                summary_Object.__dict__[key] = json.dumps(dict[key])
-            
-            #update the object
-            summary_Object.save()
-            
-            print "summary updated"
-            
-            if lecture != max_lecture: continue
             
             try:
                 email_to = config.get('email', 'to')
@@ -237,15 +180,8 @@ class CourseMIRROR:
                 
                 lecture_date = self.getDate(lectures_json, cid, lecture)
                 
-                subject = 'Automatic Summary for Lecture ' + lecture_date
-                
                 content = []
-                for key in sorted(dict):
-                    content.append(TypeMapReverse[key])
-                    for i, (text, weight) in enumerate(zip(dict[key]['summaryText'], dict[key]['weight'])):
-                        summary = "%d) %s [%d]" % (i+1, text, weight)
-                        content.append(summary)
-                    content.append('\n')
+                subject = 'Responses for Lecture %s in %s'%(lecture_date, cid)
                 
                 #get responses
                 for q in questions:
@@ -277,48 +213,23 @@ class CourseMIRROR:
                 print e
                 continue
             
-    
-    def test_summary(self, cid, lectures=None):
-        #only sumbit the last summary
-        max_lecture = self.get_max_lecture_num(cid)
-        print max_lecture
-        
-        lectures_json = fio.LoadDictJson('../data/CourseMIRROR/lectures.json')
-        
-        if lectures:
-            sheets = lectures
-            
-        if lectures==None:
-            sheets = range(0, max_lecture)
-            
-        for i in sheets:
-            lecture = i + 1
-            
-            #get the object
-            try:
-                summary_Object = Summarization.Query.get(cid=cid, lecture_number = lecture, method='ClusterARank')
-                print summary_Object.q1_summaries
-            except parse_rest.query.QueryResourceDoesNotExist:
-                print 'Error'
-            
     def run(self, cid, summarylastlecture=False):
         
-        print cid
         jsonfile = '../data/CourseMIRROR/reflections.json'
-         
+        
         #get reflections
-        reflections = self.get_reflections(cid=cid)
+        reflections = self.get_reflections(cid=None)
         with open(jsonfile, 'w') as outfile:
             json.dump(reflections, outfile, encoding='utf-8', indent=2)
          
         reflections = fio.LoadDictJson(jsonfile)
         
-        #max_lecture = self.get_max_lecture_num_from_relection(cid, reflections)
-        max_lecture = self.get_max_lecture_num(cid)
+        max_lecture = self.get_max_lecture_num_from_relection(cid, reflections)
+        if max_lecture == None: return
         print "max_lecture", max_lecture
         
         #get lectures
-        lectures = self.get_lectures(cid)
+        lectures = self.get_lectures(cid=None)
         jsonfile = '../data/CourseMIRROR/lectures.json' 
         with open(jsonfile, 'w') as outfile:
             json.dump(lectures, outfile, encoding='utf-8', indent=2)
@@ -331,50 +242,7 @@ class CourseMIRROR:
          
         self.old_N = self.N
         
-        #run senna
-        os.system('python CourseMirror_Survey.py ' + str(cid) + ' ' +  str(max_lecture))
-         
-        os.system('python student_track.py ' + str(cid) + ' ' +  str(max_lecture))
-           
-        cmd = 'cmd /C "runSennaCourseMirror.bat '+str(cid)+ ' ' + str(max_lecture) + '"'
-        os.system(cmd)
-              
-        #     . extract phrases (CourseMirror_phrasebasedShallowSummary.py)
-        cmd = 'python CourseMirror_phrasebasedShallowSummary.py ' + str(cid) + ' ' +  str(max_lecture)
-        print cmd
-        os.system(cmd)
-             
-        #     . get PhraseMead input (CourseMirror_MeadPhrase.py)
-        cmd = 'python CourseMirror_MeadPhrase.py ' + str(cid) + ' ' +  str(max_lecture)
-        print cmd
-        os.system(cmd)
-         
-        olddir = os.path.dirname(os.path.realpath(__file__))
-         
-        #     . get PhraseMead output
-        meaddir = '../../mead/bin/'
-        cmd = './get_mead_summary_phrase_coursemirror.sh ' + str(cid) + ' ' +  str(max_lecture)
-        os.chdir(meaddir)
-        retcode = subprocess.call([cmd], shell=True)
-        print retcode
-        #subprocess.call("exit 1", shell=True)
-         
-        os.chdir(olddir)
-        #     . get LSA results (CourseMirrorphrase2phraseSimilarity.java)
-        cmd = 'cmd /C "runLSA.bat '+str(cid)+ ' ' + str(max_lecture) + '"'
-        os.system(cmd)
-          
-        #     . get ClusterARank (CourseMirror_phraseClusteringbasedShallowSummaryKmedoid-New-Malformed-LexRank.py)
-        cmd = "python CourseMirror_ClusterARank.py " + str(cid) + ' ' +  str(max_lecture)
-        print cmd
-        os.system(cmd)
-        
-        #     . submit Summary (SummaryUpdate.py)
-        
-        if summarylastlecture == 1:
-            lectures=range(max_lecture-1, max_lecture)
-        else:
-            lectures=range(max_lecture-2, max_lecture-1)
+        lectures=range(max_lecture-1, max_lecture)
         
         self.upload_summary(cid, lectures=lectures)
         
@@ -416,9 +284,7 @@ if __name__ == '__main__':
     import ConfigParser
     import sys
     
-    course = sys.argv[1]
-    
-    #course = 'CS2610_2016'
+    course = 'Programmieren 1_2'
     
     config = ConfigParser.RawConfigParser()
     config.read('../config/config_'+course+'.cfg')
@@ -430,20 +296,10 @@ if __name__ == '__main__':
                                         config
                                         )
     
-    #course_mirror_server.test()
-    #course_mirror_server.test_summary(cid, lectures=[11])
-    
-    #course_mirror_server.upload_summary('CS1635', [1])
-    #course_mirror_server.upload_summary('CS0445', [15])
-    #course_mirror_server.upload_summary('IE256_2016', [11])
-    #course_mirror_server.upload_summary(cid, lectures=[4])
-#     course_mirror_server.upload_summary(cid, lectures=[27])
+    #course_mirror_server.upload_summary(cid, lectures=[1])
     
     course_mirror_server.run(cid, summarylastlecture=config.getint('course', 'summarylastlecture'))
     
-    #course_mirror_server.print_data(IE312TokenName, cid=None)
-    
-    #course_mirror_server.change_demo_user()
-    
+   
     
     

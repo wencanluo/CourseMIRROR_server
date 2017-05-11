@@ -437,9 +437,9 @@ if __name__ == '__main__':
     #course_mirror_server.upload_summary('CS0445', [15])
     #course_mirror_server.upload_summary('IE256_2016', [11])
     #course_mirror_server.upload_summary(cid, lectures=[4])
-#     course_mirror_server.upload_summary(cid, lectures=[27])
+    course_mirror_server.upload_summary(cid, lectures=[28])
     
-    course_mirror_server.run(cid, summarylastlecture=config.getint('course', 'summarylastlecture'))
+#     course_mirror_server.run(cid, summarylastlecture=config.getint('course', 'summarylastlecture'))
     
     #course_mirror_server.print_data(IE312TokenName, cid=None)
     
